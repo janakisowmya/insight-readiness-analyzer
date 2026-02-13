@@ -1,0 +1,26 @@
+_row_id,patient_id,encounter_id,service_date,billing_date,cpt_code,icd10_code,procedure_desc,billed_amount,insurance_plan,allowed_amount,patient_responsibility,payment_status,provider_id,department,notes
+1,PAT-00001,ENC-2026-0001,2026-01-10,2026-01-15,99213,J06.9,Office Visit - Level 3,185.00,BlueCross PPO,142.50,42.50,paid,NPI-1234567890,Family Medicine,
+2,PAT-00002,ENC-2026-0002,2026-01-10,2026-01-15,99213-25,E11.65,Office Visit w/ Significant Eval,220.00,Aetna HMO,168.00,52.00,paid,NPI-1234567890,Internal Medicine,Modifier 25 - separate E/M same day as procedure
+3,PAT-00003,ENC-2026-0003,2026-01-11,2026-01-20,99215,M54.5,Office Visit - Level 5,350.00,UHC Choice Plus,0.00,350.00,denied,NPI-9876543210,Orthopedics,DENIED: Prior authorization required - not obtained
+4,PAT-00004,ENC-2025-9912,2025-09-15,2026-01-12,43239,K21.0,Upper GI Endoscopy w/ Biopsy,4250.00,Medicare Part B,1847.32,369.46,partial,NPI-5555555555,Gastroenterology,Delayed billing - coding review completed 01/10/2026
+5,PAT-00005,ENC-2026-0005,2026-01-12,2026-01-12,99395,Z00.00,Annual Wellness Visit,275.00,BlueCross PPO,275.00,0.00,paid,NPI-1234567890,Family Medicine,Preventive - covered at 100%
+6,PAT-00006,ENC-2026-0006,2026-01-13 02:34:00,2026-01-30,99285,I21.09;I50.9;R07.9,ER Visit - Level 5 Critical,18750.00,Medicaid,3200.00,0.00,paid,NPI-ER-TEAM-01,Emergency Dept,STEMI - transferred to cath lab - multiple DX
+7,PAT-00007,ENC-2026-0007,2026-01-14,2026-01-14,99203,J02.9,New Patient Visit,250.00,SELF-PAY,250.00,250.00,pending,NPI-1234567890,Urgent Care,Uninsured - sliding fee scale applied
+8,PAT-00008,ENC-2026-0008,2026-01-15,2026-01-20,99024,M23.611,Post-Op Follow-Up,0.00,Cigna Open Access,0.00,0.00,bundled,NPI-9876543210,Orthopedics,BUNDLED: Included in 90-day global surgical package #27447
+9,PAT-00009,ENC-2026-0009,2026-01-15,2026-01-16,80053,R73.09,Comprehensive Metabolic Panel,45.00,BlueCross PPO,18.72,3.74,paid,NPI-LAB-001,Laboratory,Quest Diagnostics reference lab
+10,PAT-00010,ENC-2025-8800,2025-11-20,2026-01-10,ADJ-CHARITY,N/A,Charity Care Write-Off,-12500.00,UNINSURED,0.00,0.00,adjusted,ADMIN-FIN,Finance,"Board-approved charity write-off - original balance $12,500"
+11,REDACTED,REDACTED,2026-01-16,2026-01-16,REDACTED,REDACTED,*** PHI REMOVED ***,REDACTED,REDACTED,REDACTED,REDACTED,REDACTED,REDACTED,REDACTED,Record exists for audit trail only - PHI purged per retention policy
+12,PAT-00012,ENC-2026-0012,2026-01-16,2026-01-16,99214-95,F32.1,Telehealth Visit - Established,175.00,Aetna HMO,140.00,35.00,paid,NPI-TELE-001,Psychiatry,POS 10 - Telehealth in patient home. Modifier 95
+13,PAT-00001,ENC-2026-0001,2026-01-10,2026-01-18,99213,J06.9,Office Visit - Level 3,185.00,BlueCross PPO,142.50,42.50,paid,NPI-1234567890,Family Medicine,DUPLICATE CHARGE - rebilled in error
+14,PAT-00014,ENC-2026-0014,2026-01-17,2026-01-17,99213,S62.001A,Office Visit - Hand Fracture F/U,185.00,WC-EMPLOYERS-FIRST,185.00,0.00,paid,NPI-9876543210,Orthopedics,WC Claim #WC-2025-78456 - employer liable
+15,PAT-00015,ENC-2026-0015,2026-01-17,2026-01-25,00630-AA,K35.80,Anesthesia - Appendectomy,2400.00,UHC Choice Plus,1680.00,336.00,paid,NPI-ANES-001,Anesthesiology,150 min anesthesia time. AA modifier = anesthesiologist personally performed
+16,PAT-00016,ENC-2026-0016,2026-01-18,2026-01-25,27447,M17.11,Total Knee Replacement,45000.00,Medicare Part A + Medigap,12500.00,1250.00,paid,NPI-9876543210,Orthopedics,"Primary: Medicare $11,250. Secondary: Medigap $1,250. Patient: $1,250"
+17,PAT-00017,ENC-2026-0017,2026-01-19,2026-01-22,99214,J45.20,Asthma Follow-Up,225.00,BlueCross PPO,178.50,46.50,paid,NPI-1234567890,Pulmonology,
+18,PAT-00018,ENC-2026-0018,2026-01-19,2026-01-22,99213,E78.5,Cholesterol Check,185.00,Aetna HMO,142.50,42.50,paid,NPI-1234567890,Internal Medicine,
+19,PAT-00019,ENC-2026-0019,2026-01-20,2026-01-23,99214,I10,Hypertension Management,225.00,UHC Choice Plus,178.50,46.50,paid,NPI-1234567890,Cardiology,
+20,PAT-00020,ENC-2026-0020,2026-01-20,2026-01-23,99213,M79.3,Knee Pain Eval,185.00,Cigna Open Access,142.50,42.50,paid,NPI-9876543210,Orthopedics,
+21,PAT-00021,ENC-2026-0021,2026-01-21,2026-01-24,99214,G43.909,Migraine Follow-Up,225.00,BlueCross PPO,178.50,46.50,paid,NPI-NEURO-01,Neurology,
+22,PAT-00022,ENC-2026-0022,2026-01-21,2026-01-24,99213,L70.0,Acne Treatment,185.00,Aetna HMO,142.50,42.50,paid,NPI-DERM-01,Dermatology,
+23,PAT-00023,ENC-2026-0023,2026-01-22,2026-01-25,99395,Z00.00,Annual Physical,275.00,UHC Choice Plus,275.00,0.00,paid,NPI-1234567890,Family Medicine,
+24,PAT-00024,ENC-2026-0024,2026-01-22,2026-01-25,99214,N39.0,UTI Follow-Up,225.00,Medicaid,98.00,0.00,paid,NPI-1234567890,Internal Medicine,
+25,PAT-00025,ENC-2026-0025,2026-01-23,2026-01-26,99213,H10.10,Conjunctivitis,185.00,BlueCross PPO,142.50,42.50,paid,NPI-EYE-001,Ophthalmology,

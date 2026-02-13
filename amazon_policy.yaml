@@ -1,0 +1,50 @@
+dataset:
+  name: amazon_products
+
+reproducibility:
+  policy_hash: "amazon_products_v1"
+
+roles:
+  critical_columns:
+    - _row_id
+    - product_id
+  protected_columns:
+    - product_id
+    - product_name
+    - user_id
+    - user_name
+    - review_id
+    - review_title
+    - review_content
+    - about_product
+    - img_link
+    - product_link
+    - category
+
+standardization:
+  unicode_normalization: NFKC
+  strip_whitespace: true
+  case_mode: null
+
+parsing:
+  column_types:
+    discounted_price: float
+    actual_price: float
+    discount_percentage: float
+    rating: float
+    rating_count: integer
+  currency_symbols: ["₹", "$", "Rs", "Rs."]
+  percent_handling: strip_symbol
+  thousands_separator: ","
+
+imputation:
+  strategy: median
+  columns:
+    - discounted_price
+    - actual_price
+    - discount_percentage
+    - rating
+    - rating_count
+
+datetime:
+  columns: {}

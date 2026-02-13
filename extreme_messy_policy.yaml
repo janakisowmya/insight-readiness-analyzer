@@ -1,0 +1,119 @@
+dataset:
+  name: extreme_messy
+
+reproducibility:
+  policy_hash: "extreme_messy_policy_v1"
+
+roles:
+  critical_columns:
+    - _row_id
+    - customer_id
+  protected_columns:
+    - customer_id
+    - email
+    - phone
+    - meta_json
+
+standardization:
+  strip_nonprinting: true
+  global_trim_whitespace: true
+  global_collapse_whitespace: true
+  casefold: lower
+  mappings:
+    is_active:
+      "yes": "true"
+      "y": "true"
+      "t": "true"
+      "true": "true"
+      "1": "true"
+      "on": "true"
+      "no": "false"
+      "n": "false"
+      "f": "false"
+      "false": "false"
+      "0": "false"
+      "off": "false"
+
+    flag:
+      "true": "true"
+      "false": "false"
+      "1": "true"
+      "0": "false"
+      "y": "true"
+      "n": "false"
+      "t": "true"
+      "f": "false"
+
+    segment:
+      " enterprise ": "enterprise"
+      "enterprise": "enterprise"
+      "smb": "smb"
+      "smb ": "smb"
+      "sm b": "smb"
+      "unknown": "unknown"
+
+    region:
+      " eu ": "eu"
+      "eu": "eu"
+      "e u": "eu"
+      "apac": "apac"
+      " apac ": "apac"
+
+parsing:
+  column_types:
+    _row_id: integer
+    amount: numeric
+    discount_pct: numeric
+    account_balance: numeric
+    signup_date: datetime
+    last_login: datetime
+    is_active: boolean
+    flag: boolean
+
+  boolean:
+    true_values: ["true", "t", "yes", "y", "1", "on"]
+    false_values: ["false", "f", "no", "n", "0", "off"]
+    on_failure: "null"
+
+  numeric:
+    allow_commas: true
+    allow_currency_symbols: true
+    allow_percent_symbol: true
+    percent_scale: "auto"
+    on_failure: "null"
+
+  datetime:
+    dayfirst: false
+    yearfirst: false
+    allowed_formats:
+      - "%Y-%m-%d"
+      - "%Y/%m/%d"
+      - "%d/%m/%Y"
+      - "%d-%m-%Y"
+      - "%Y-%m-%dT%H:%M:%SZ"
+      - "%Y-%m-%dT%H:%M:%S.%fZ"
+      - "%Y-%m-%d %H:%M:%S"
+      - "%Y/%m/%d %H:%M"
+    on_failure: "null"
+
+missing_data:
+  enabled: true
+  drop_if_missing_critical: true
+  imputation:
+    numeric:
+      default: mean
+      allow_if_missing_pct_leq: 0.35
+      constants: {}
+    datetime:
+      default: constant
+      allow_if_missing_pct_leq: 0.25
+      constants:
+        last_login: "2026-02-01T00:00:00Z"
+    categorical:
+      default: mode
+      allow_if_missing_pct_leq: 0.40
+      constants:
+        region: "unknown"
+        segment: "unknown"
+        zip: "00000"
+        notes: "missing"

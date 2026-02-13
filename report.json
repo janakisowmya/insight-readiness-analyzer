@@ -1,0 +1,89 @@
+{
+  "actions": {
+    "event_counts": {
+      "imputation_fill": 6,
+      "parsing_failure": 2,
+      "row_dropped": 1,
+      "standardization_change": 16
+    },
+    "row_drops": {
+      "by_reason": {
+        "missing_critical_column": 1
+      },
+      "total": 1
+    },
+    "top_impacted_columns": [
+      {
+        "column": "is_active",
+        "count": 8
+      },
+      {
+        "column": "segment",
+        "count": 6
+      },
+      {
+        "column": "amount",
+        "count": 5
+      },
+      {
+        "column": "notes",
+        "count": 4
+      },
+      {
+        "column": "signup_date",
+        "count": 1
+      }
+    ]
+  },
+  "compliance": {
+    "critical_row_drops": {
+      "by_reason": {
+        "missing_critical_column": 1
+      },
+      "total": 1
+    },
+    "protected_columns": {
+      "protected_count": 1,
+      "status": "pass",
+      "violations": []
+    },
+    "skipped_imputation_columns": []
+  },
+  "metadata": {
+    "dataset_name": "messy_test",
+    "policy_hash": "51398b6039e9a863",
+    "rows_optimized": 7,
+    "rows_raw": 8,
+    "timestamp_optimized": "2026-02-08T23:30:47.842198+00:00",
+    "timestamp_raw": "2026-02-08T23:30:47.826878+00:00"
+  },
+  "readiness": {
+    "delta": {
+      "breakdown": {
+        "completeness": 4.88,
+        "consistency": 0.0,
+        "uniqueness": 0.0,
+        "validity": 2.5
+      },
+      "score": 7.38
+    },
+    "optimized": {
+      "breakdown": {
+        "completeness": 39.05,
+        "consistency": 10.0,
+        "uniqueness": 20.0,
+        "validity": 30.0
+      },
+      "score": 99.05
+    },
+    "raw": {
+      "breakdown": {
+        "completeness": 34.17,
+        "consistency": 10.0,
+        "uniqueness": 20.0,
+        "validity": 27.5
+      },
+      "score": 91.67
+    }
+  }
+}

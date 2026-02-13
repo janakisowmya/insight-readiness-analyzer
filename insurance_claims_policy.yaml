@@ -1,0 +1,96 @@
+dataset:
+  name: insurance_claims
+
+reproducibility:
+  policy_hash: "insurance_claims_v1"
+
+roles:
+  critical_columns:
+    - _row_id
+    - policy_number
+    - claim_id
+  protected_columns:
+    - policy_number
+    - claim_id
+    - claimant_name
+    - adjuster_id
+    - notes
+
+standardization:
+  strip_nonprinting: true
+  global_trim_whitespace: true
+  global_collapse_whitespace: true
+  casefold: lower
+  mappings:
+    claim_status:
+      "closed": "closed"
+      "open": "open"
+      "partial": "partial"
+      "denied": "denied"
+      "paid": "paid"
+      "pending": "pending"
+      "under_investigation": "under_investigation"
+      "info_only": "info_only"
+      "processed": "processed"
+      "auto_approved": "auto_approved"
+
+    claim_type:
+      "auto_collision": "auto_collision"
+      "auto_comprehensive": "auto_comprehensive"
+      "auto_theft": "auto_theft"
+      "auto_glass": "auto_glass"
+      "homeowner_fire": "homeowner_fire"
+      "homeowner_water": "homeowner_water"
+      "homeowner_wind": "homeowner_wind"
+      "homeowner_theft": "homeowner_theft"
+      "homeowner_liability": "homeowner_liability"
+      "workers_comp_injury": "workers_comp"
+      "life_death_benefit": "life_death_benefit"
+      "subrogation_recovery": "subrogation"
+      "reinsurance_recovery": "reinsurance"
+      "premium_refund": "premium_refund"
+
+parsing:
+  column_types:
+    _row_id: integer
+    claim_amount: numeric
+    deductible: numeric
+    payout_amount: numeric
+    loss_ratio: numeric
+    premium_paid: numeric
+    claim_date: datetime
+    incident_date: datetime
+    coverage_start: datetime
+
+  numeric:
+    allow_commas: true
+    allow_currency_symbols: true
+    allow_percent_symbol: false
+    on_failure: "null"
+
+  datetime:
+    dayfirst: false
+    yearfirst: false
+    allowed_formats:
+      - "%Y-%m-%d"
+      - "%Y-%m-%d %H:%M:%S"
+    on_failure: "null"
+
+missing_data:
+  enabled: true
+  drop_if_missing_critical: true
+  imputation:
+    numeric:
+      default: median
+      allow_if_missing_pct_leq: 0.35
+      constants: {}
+    datetime:
+      default: constant
+      allow_if_missing_pct_leq: 0.20
+      constants:
+        incident_date: "2026-01-01T00:00:00Z"
+    categorical:
+      default: mode
+      allow_if_missing_pct_leq: 0.40
+      constants:
+        claim_status: "unknown"

@@ -1,0 +1,47 @@
+dataset:
+  name: freelancers_with_id
+reproducibility:
+  policy_hash: freelancers_with_id_auto_v1
+roles:
+  critical_columns:
+  - _row_id
+  - freelancer_ID
+  protected_columns:
+  - freelancer_ID
+  - name
+standardization:
+  unicode_normalization: NFKC
+  strip_whitespace: true
+  case_mode: null
+parsing:
+  column_types:
+    age: float
+    years_of_experience: float
+    hourly_rate (USD): float
+    rating: float
+    client_satisfaction: float
+  currency_symbols:
+  - $
+  - USD
+  percent_handling: strip_symbol
+  thousands_separator: ','
+  boolean_columns:
+    is_active:
+      true_values:
+      - '1'
+      - 'true'
+      - y
+      - 'yes'
+      false_values:
+      - '0'
+      - 'false'
+      - n
+      - 'no'
+imputation:
+  strategy: median
+  columns:
+  - age
+  - client_satisfaction
+  - hourly_rate (USD)
+  - rating
+  - years_of_experience

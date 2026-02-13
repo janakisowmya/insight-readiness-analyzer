@@ -1,0 +1,91 @@
+dataset:
+  name: hospital_billing
+
+reproducibility:
+  policy_hash: "hospital_billing_v1"
+
+roles:
+  critical_columns:
+    - _row_id
+    - patient_id
+    - encounter_id
+  protected_columns:
+    - patient_id
+    - encounter_id
+    - provider_id
+    - notes
+
+standardization:
+  strip_nonprinting: true
+  global_trim_whitespace: true
+  global_collapse_whitespace: true
+  casefold: lower
+  mappings:
+    payment_status:
+      "paid": "paid"
+      "denied": "denied"
+      "pending": "pending"
+      "partial": "partial"
+      "bundled": "bundled"
+      "adjusted": "adjusted"
+      "processed": "processed"
+
+    department:
+      "family medicine": "family_medicine"
+      "internal medicine": "internal_medicine"
+      "orthopedics": "orthopedics"
+      "emergency dept": "emergency"
+      "gastroenterology": "gastroenterology"
+      "urgent care": "urgent_care"
+      "laboratory": "laboratory"
+      "finance": "finance"
+      "psychiatry": "psychiatry"
+      "pulmonology": "pulmonology"
+      "cardiology": "cardiology"
+      "neurology": "neurology"
+      "dermatology": "dermatology"
+      "ophthalmology": "ophthalmology"
+      "anesthesiology": "anesthesiology"
+
+parsing:
+  column_types:
+    _row_id: integer
+    billed_amount: numeric
+    allowed_amount: numeric
+    patient_responsibility: numeric
+    service_date: datetime
+    billing_date: datetime
+
+  numeric:
+    allow_commas: true
+    allow_currency_symbols: true
+    allow_percent_symbol: false
+    on_failure: "null"
+
+  datetime:
+    dayfirst: false
+    yearfirst: false
+    allowed_formats:
+      - "%Y-%m-%d"
+      - "%Y-%m-%d %H:%M:%S"
+    on_failure: "null"
+
+missing_data:
+  enabled: true
+  drop_if_missing_critical: true
+  imputation:
+    numeric:
+      default: median
+      allow_if_missing_pct_leq: 0.30
+      constants: {}
+    datetime:
+      default: constant
+      allow_if_missing_pct_leq: 0.20
+      constants:
+        billing_date: "2026-01-15T00:00:00Z"
+    categorical:
+      default: mode
+      allow_if_missing_pct_leq: 0.40
+      constants:
+        payment_status: "unknown"
+        department: "unknown"

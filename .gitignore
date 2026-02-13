@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.coverage
+dist/
+build/
+*.egg-info/
+
+# System
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# IRA Outputs
+*_cleaned.csv
+*_audit.jsonl
+*_report.json
+*_report.md
+regression_*
+profile.json
+profile_with_stats.json
+raw_profile.json
+compare_profile.json
+
+# Keep raw CSVs for testing, but ignore specific large or temp ones if needed
+# For now, we allow *.csv but ignore the output patterns above.

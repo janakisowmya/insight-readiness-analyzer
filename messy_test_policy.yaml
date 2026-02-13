@@ -1,0 +1,63 @@
+dataset:
+  name: messy_test
+  primary_key:
+    columns: ["customer_id"]
+
+roles:
+  critical_columns: ["customer_id"]
+  protected_columns: ["customer_id"]
+
+standardization:
+  strip_nonprinting: true
+  global_trim_whitespace: true
+  global_collapse_whitespace: true
+  casefold: lower
+  mappings:
+    is_active:
+      "yes": "true"
+      "y": "true"
+      "no": "false"
+      "0": "false"
+
+parsing:
+  column_types:
+    amount: numeric
+    signup_date: datetime
+    is_active: boolean
+
+  numeric:
+    allow_commas: true
+    allow_currency_symbols: true
+    allow_percent_symbol: true
+
+  datetime:
+    allowed_formats:
+      - "%Y-%m-%d"
+      - "%m/%d/%Y"
+      - "%Y/%m/%d"
+
+  boolean:
+    true_values: ["true", "t", "1", "yes", "y"]
+    false_values: ["false", "f", "0", "no", "n"]
+
+missing_data:
+  enabled: true
+  drop_if_missing_critical: true
+
+  imputation:
+    numeric:
+      default: mean
+      allow_if_missing_pct_leq: 0.60
+      constants: {}
+
+    datetime:
+      default: none
+      allow_if_missing_pct_leq: 0.60
+      constants:
+        signup_date: "2026-02-01"
+
+    categorical:
+      default: mode
+      allow_if_missing_pct_leq: 0.60
+      constants:
+        segment: "unknown"
