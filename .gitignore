@@ -28,3 +28,8 @@ compare_profile.json
 
 # Keep raw CSVs for testing, but ignore specific large or temp ones if needed
 # For now, we allow *.csv but ignore the output patterns above.
+*.csv
+*.yaml
+*.yml
+*_report.json
+*_report.md
