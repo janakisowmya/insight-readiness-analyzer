@@ -1,9 +1,0 @@
-_row_id,customer_id,amount,signup_date,is_active,segment,notes
-1,C001," $1,200.50 ","2026-01-05","YES","  enterprise  ","has\tcontrol\x0bchar"
-2,C002,"","01/31/2026","no","SMB","  "
-3,C003,"nan","2026/02/01","True","null","N/A"
-4,,"$3,000","2026-02-30","y","mid market","bad date"
-5,C005,"15%","2026-02-05","0","smb","percent amount"
-6,C006,"₹ 2,500","2026-02-07","FALSE","Enterprise","currency INR"
-7,C007,"1,000","2026-02-08","n/a","sMb","mixed casing"
-8,C008,"abc","2026-02-09","yes","SMB","non-numeric amount"
