@@ -88,11 +88,12 @@ def apply_imputation(
     audit: Optional[AuditLogger] = None,
     *,
     clock: Optional[Callable[[], str]] = None,
+    precomputed_stats: Optional[Dict[str, Any]] = None,
 ) -> pd.DataFrame:
     """
-    Applies missing_data.imputation rules AFTER parsing.
-    Must respect allow_if_missing_pct_leq thresholds.
-    Must log every filled value (row_id, column, old, new, reason, timestamp).
+    Applies missing_data.imputation rules.
+    If precomputed_stats is provided, uses those values for mean/median/mode
+    instead of calculating from the current dataframe (chunk).
     """
     _require_row_id(df)
     
@@ -187,6 +188,9 @@ def apply_imputation(
             if constant_val is not None:
                 strategy = "constant"
                 fill_val = constant_val
+            elif strategy in ("mean", "median", "mode") and precomputed_stats and col in precomputed_stats:
+                # Use global precomputed stat if available
+                fill_val = precomputed_stats[col].get(strategy)
             elif strategy == "mean" and pd.api.types.is_numeric_dtype(s):
                 fill_val = s.mean()
             elif strategy == "median" and pd.api.types.is_numeric_dtype(s):
@@ -196,8 +200,13 @@ def apply_imputation(
                 non_missing = s[~missing_mask]
                 modes = non_missing.mode()
                 fill_val = modes.iloc[0] if not modes.empty else None
-            elif strategy == "constant" and constant_val is None:
-                 continue
+            elif strategy == "constant":
+                if constant_val is not None:
+                    fill_val = constant_val
+                elif bucket_name == "categorical":
+                    fill_val = "Unknown"
+                else:
+                    continue
             else:
                 continue
 

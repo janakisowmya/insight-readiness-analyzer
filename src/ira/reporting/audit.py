@@ -206,3 +206,26 @@ class AuditLogger:
         if self.file:
             self.file.close()
         self._opened = False
+
+    def get_logs(self) -> List[Dict[str, Any]]:
+        """Return list of sampled events (flattened)."""
+        all_samples = []
+        for key, samples in self._summary_samples.items():
+            all_samples.extend(samples)
+        return all_samples
+
+    def get_stats_df(self) -> Any:
+        """Return a DataFrame summary of event counts."""
+        import pandas as pd
+        rows = []
+        for key, count in self._summary_counts.items():
+            etype, col, reason = key
+            rows.append({
+                "Event Type": etype,
+                "Column": col,
+                "Reason": reason,
+                "Count": count
+            })
+        if not rows:
+            return pd.DataFrame(columns=["Event Type", "Column", "Reason", "Count"])
+        return pd.DataFrame(rows)

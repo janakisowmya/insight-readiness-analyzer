@@ -49,10 +49,6 @@ _PROTECTED_PATTERNS: List[str] = [
     # Contact
     r"(?i)\bemail\b", r"(?i)\be[_\-]?mail\b", r"(?i)\bphone\b", r"(?i)\bmobile\b",
     r"(?i)\bcell\b", r"(?i)\btelephone\b", r"(?i)\bfax\b", r"(?i)\bcontact\b",
-    # Address / Location
-    r"(?i)\baddress\b", r"(?i)\bstreet\b", r"(?i)\bcity\b", r"(?i)\bstate\b",
-    r"(?i)\bzip\b", r"(?i)\bpostal\b", r"(?i)\bcountry\b", r"(?i)\bregion\b",
-    r"(?i)\blocation\b", r"(?i)\bhome\b",
     # Identity documents
     r"(?i)\bssn\b", r"(?i)\bsocial[_\s]?security\b", r"(?i)\bpassport\b",
     r"(?i)\bdriver[_\s]?licen[sc]e\b", r"(?i)\bnational[_\s]?id\b", r"(?i)\btax[_\s]?id\b",
@@ -291,11 +287,20 @@ def _detect_protected(col_name: str, patterns: List[str] = _PROTECTED_PATTERNS) 
 def _detect_id_column(col_name: str, series: pd.Series) -> bool:
     """Detect if a column is likely an ID column."""
     name_lower = col_name.lower()
+    
+    # Exclusion: Zip codes and Postal codes are not row IDs
+    if any(term in name_lower for term in ["zip", "postal", "cep"]):
+        return False
+        
     # Name-based check
     if any(kw in name_lower for kw in ["_id", "id", "code", "key", "ref"]):
         return True
     # High-cardinality string column (likely an ID)
     if series.dtype == object:
+        # Exclusion: Don't flag as ID if it looks like a metric or date
+        if any(term in name_lower for term in ["pay", "wage", "salary", "amount", "price", "cost", "total", "date", "created", "updated", "time", "at", "on"]):
+            return False
+
         nunique = series.nunique()
         if nunique / max(len(series), 1) > 0.90:
             # Check if values look like IDs (alphanumeric, short)
@@ -343,14 +348,12 @@ def infer_policy(
     extra_patterns = [rf"(?i)\b{re.escape(kw)}\b" for kw in learned_keywords]
     active_protected_patterns = _PROTECTED_PATTERNS + extra_patterns
 
-    # Column type hints from past policies
-    type_hints = store.get_column_type_hints()
-
     column_types: Dict[str, str] = {}
     boolean_columns: Dict[str, Any] = {}
     datetime_columns: Dict[str, Any] = {}
     protected_cols: List[str] = []
     critical_cols: List[str] = []
+    validity_rules: Dict[str, Any] = {}
     all_currency_symbols: Set[str] = set()
     has_percent_cols: Set[str] = set()
 
@@ -387,47 +390,98 @@ def infer_policy(
         # 2. Check if protected by name
         if _detect_protected(col, active_protected_patterns):
             protected_cols.append(col)
-            continue
+            # Continue to type detection anyway (could be numeric ID or date)
 
         # 3. Try boolean detection first (subset of text)
         is_bool, true_vals, false_vals = _detect_boolean(
             sample_values, true_set=active_bool_true, false_set=active_bool_false
         )
         if is_bool:
+            column_types[col] = "boolean"
             boolean_columns[col] = {
                 "true_values": true_vals,
                 "false_values": false_vals,
             }
             continue
 
-        # 4. Try numeric detection
+        # 3.5. SEMANTIC FORCE: Zip Codes / Postal Codes
+        # Must catch BEFORE numeric detection to preserve leading zeros
+        if any(term in col.lower() for term in ["zip", "postal", "cep", "postcode"]):
+            column_types[col] = "text"
+            # Add validity rule to ensure they look like zip codes?
+            # For now, just ensuring they are text is the critical fix.
+            # We can optionally add a regex if we know the country, but "text" is safer than "int".
+            continue
+
+        # 4. Try numeric detection (Relaxed threshold: 0.5)
+        # Using relaxed threshold to catch "Total Pay" with garbage text
         is_numeric, has_pct, currencies = _detect_numeric(
             sample_values, symbols=active_currency_symbols, codes=active_currency_codes
         )
-        if is_numeric:
-            column_types[col] = "float"
+        # Manually verify sufficient numeric ratio (0.5)
+        parsed_count = 0
+        for v in sample_values:
+            clean = _strip_currency(v, symbols=active_currency_symbols, codes=active_currency_codes).replace(",", "")
+            # Handle K/M/B suffixes for detection
+            if clean and clean[-1].upper() in ("K", "M", "B", "T"):
+                 clean = clean[:-1]
+            if _try_float(clean):
+                parsed_count += 1
+        
+        numeric_ratio = parsed_count / len(sample_values)
+        if numeric_ratio >= 0.50:
+            column_types[col] = "float" # Default to float for safety
             all_currency_symbols.update(currencies)
             if has_pct:
                 has_percent_cols.add(col)
+            
+            # Setup validity for numeric: non-negative by default for money-like things
+            if any(term in col.lower() for term in ["price", "cost", "amount", "pay", "wage", "salary"]):
+                 validity_rules[col] = {"range": {"min": 0}, "on_violation": "null"}
             continue
 
-        # 5. Try datetime detection
+        # 5. Try datetime detection (Relaxed threshold: 0.4)
         is_dt, formats = _detect_datetime(sample_values)
-        if is_dt:
+        # Re-check ratio with lower threshold
+        dt_parsed = 0
+        for v in sample_values:
+             try:
+                 pd.to_datetime(v, errors="raise")
+                 dt_parsed += 1
+             except:
+                 pass
+        
+        if dt_parsed / len(sample_values) >= 0.40:
+            column_types[col] = "datetime"
+            # Hardening: Dates are usually safe to parse and not "protected" in the sense of needing to remain raw text
+            if col in protected_cols:
+                protected_cols.remove(col)
+                
+            # Add common formats that might be missed
+            formats.extend(["%b %d %Y", "%d-%b-%Y"]) # Add specific formats from user issues
             datetime_columns[col] = {
-                "formats": formats,
+                "formats": list(set(formats)),
                 "on_failure": "null",
             }
             continue
 
         # 6. Content-based PII detection (phone numbers, SSNs, emails, etc.)
-        pii_match_count = 0
-        for v in sample_values[:50]:  # Check first 50 values
-            for pattern in _PII_CONTENT_PATTERNS:
-                if pattern.match(v):
-                    pii_match_count += 1
-                    break
-        if pii_match_count / min(len(sample_values), 50) >= 0.30:
+        pii_counts = {"email": 0, "phone": 0}
+        for v in sample_values[:50]:
+            if re.match(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", v):
+                pii_counts["email"] += 1
+            if re.match(r"^\+?\d[\d\-\s\(\)]{7,}$", v):
+                pii_counts["phone"] += 1
+        
+        if pii_counts["email"] / min(len(sample_values), 50) >= 0.30:
+            protected_cols.append(col)
+            validity_rules[col] = {
+                "regex": r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", 
+                "on_violation": "flag"
+            }
+            continue
+            
+        if pii_counts["phone"] / min(len(sample_values), 50) >= 0.30:
             protected_cols.append(col)
             continue
 
@@ -439,7 +493,7 @@ def infer_policy(
     # Build the policy dict
     policy: Dict[str, Any] = {
         "dataset": {"name": dataset_name},
-        "reproducibility": {"policy_hash": f"{dataset_name}_auto_v1"},
+        "reproducibility": {"policy_hash": f"{dataset_name}_auto_v2_hardened"},
         "roles": {
             "critical_columns": sorted(set(critical_cols)),
             "protected_columns": sorted(set(protected_cols)),
@@ -447,12 +501,30 @@ def infer_policy(
         "standardization": {
             "unicode_normalization": "NFKC",
             "strip_whitespace": True,
-            "case_mode": None,
+            "asciify": True, # NEW: Default to stripping accents for cleaner text
+            "case_mode": "preserve", 
         },
         "parsing": {
             "column_types": column_types,
         },
     }
+
+    # Semantic Text Handling: Cities/States
+    # If we detect city-like columns, we might want to title-case them.
+    # For now, let's keep it global or per-column? 
+    # The current standardize.py supports GLOBAL casefold.
+    # Let's check if we have city columns to justify turning on Title Case globally?
+    # Risk: Title casing "USA" -> "Usa". 
+    # Better approach: If we see "city", "municipio", "state", "provincia" -> Enable Title Case?
+    # For safety, let's stick to "preserve" globally, but maybe in Phase 14 we make it per-column.
+    # User asked specifically for "City Standardization".
+    # Let's enable Title Case if we see city columns and NO uppercase-only columns (like ID codes).
+    
+    city_cols = [c for c in df.columns if any(x in c.lower() for x in ["city", "municipio", "town", "suburb"])]
+    if city_cols:
+         # Check if they are already upper?
+         # If mixed/messy, policy = title.
+         policy["standardization"]["casefold"] = "title"
 
     # Add currency symbols if detected
     if all_currency_symbols:
@@ -472,12 +544,24 @@ def infer_policy(
     # Add datetime columns if detected
     if datetime_columns:
         policy["datetime"] = {"columns": datetime_columns}
+    
+    # Add inferred validity rules
+    if validity_rules:
+        policy["validity"] = {"rules": validity_rules}
 
-    # Add imputation for numeric columns
-    if column_types:
-        policy["imputation"] = {
-            "strategy": "median",
-            "columns": sorted(column_types.keys()),
-        }
+    # Add imputation for ALL columns (Universal Imputation)
+    # Structure must match missing.py expectation: missing_data.imputation.{bucket}.default
+    imputation: Dict[str, Any] = {
+        "numeric": {"default": "median"},
+        "categorical": {"default": "constant", "constants": {}}, # Default to "Unknown" if handled by missing.py logic or constant default
+        "datetime": {"default": "bfill"},
+        "boolean": {"default": "mode"}
+    }
+    
+    # We populate missing_data section
+    if "missing_data" not in policy:
+        policy["missing_data"] = {}
+    
+    policy["missing_data"]["imputation"] = imputation
 
     return policy

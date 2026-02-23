@@ -83,6 +83,37 @@ def _strip_currency_and_commas(text: str, *, allow_commas: bool, allow_currency:
     return s
 
 
+
+def _expand_metric_suffixes(text: str) -> str:
+    """Expand K/M/B/T suffixes to full numbers (e.g. 1.5K -> 1500)."""
+    s = text.upper().strip()
+    multiplier = 1.0
+    
+    if s.endswith("K"):
+        multiplier = 1_000.0
+        s = s[:-1]
+    elif s.endswith("M"):
+        multiplier = 1_000_000.0
+        s = s[:-1]
+    elif s.endswith("B"):
+        multiplier = 1_000_000_000.0
+        s = s[:-1]
+    elif s.endswith("T"):
+        multiplier = 1_000_000_000_000.0
+        s = s[:-1]
+        
+    if multiplier != 1.0:
+        try:
+            # Use float conversion on the stem
+            val = float(s) * multiplier
+            # Return as string to fit into the existing raw_string processing pipeline
+            return str(val)
+        except ValueError:
+            return text
+            
+    return text
+
+
 def _normalize_numeric_string(raw: str) -> str:
     """Pre-process a raw numeric string to handle edge cases before float() conversion.
     Handles: parenthesized negatives, en/em-dash minus, leading +, spaced thousands,
@@ -243,6 +274,9 @@ def apply_parsing(
                 raw_num = raw
 
             raw_num = _strip_currency_and_commas(raw_num, allow_commas=allow_commas, allow_currency=allow_currency)
+
+            # Expand K/M/B/T suffixes
+            raw_num = _expand_metric_suffixes(raw_num)
 
             # Normalize: parenthesized negatives, en/em-dash minus, NaN/Infinity rejection
             try:

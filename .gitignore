@@ -41,3 +41,4 @@ verify_*.py
 regression_*
 *.json
 !pyrightconfig.json
+tests/

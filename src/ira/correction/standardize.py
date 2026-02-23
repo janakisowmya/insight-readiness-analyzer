@@ -244,6 +244,36 @@ def apply_standardization(
                 )
                 df[col] = new_s
 
+    # 0. Asciify (Strip Accents) - NEW
+    if std_cfg.get("asciify", False):
+        import unicodedata
+        for col in df.columns:
+            if col in protected or not _is_string_like(df[col]):
+                continue
+            old_s = df[col]
+            # NFD decompose, filter non-spacing marks, encode ASCII
+            new_s = old_s.copy()
+            mask = new_s.notna()
+            
+            def _remove_accents(text):
+                if not isinstance(text, str): return text
+                return "".join(c for c in unicodedata.normalize("NFD", text) if unicodedata.category(c) != "Mn")
+            
+            new_s.loc[mask] = new_s.loc[mask].apply(_remove_accents)
+            
+            if not old_s.equals(new_s):
+                _audit_change(
+                    audit,
+                    column=col,
+                    row_ids=row_ids,
+                    old_s=old_s,
+                    new_s=new_s,
+                    reason="asciify_accents",
+                    policy_section="standardization.asciify",
+                    clock=clk,
+                )
+                df[col] = new_s
+
     # 4. Global casefold
     casefold = std_cfg.get("casefold", "none")
     if isinstance(casefold, str) and casefold != "none":
